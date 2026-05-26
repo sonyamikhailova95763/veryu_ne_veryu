@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Игра «Верю – не верю» | Компьютерная графика</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none; /* чтобы случайно не выделить текст при клике */
+        }
+
+        body {
+            background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* главная карточка */
+        .game-container {
+            max-width: 900px;
+            width: 100%;
+            background: #fef9e8;
+            background-image: radial-gradient(circle at 10% 20%, rgba(255,245,215,0.8) 0%, #fff5e6 100%);
+            border-radius: 64px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255,255,255,0.6);
+            padding: 2rem 2rem 2rem 2rem;
+            transition: all 0.2s;
+        }
+
+        /* заголовок */
+        h1 {
+            font-size: 1.8rem;
+            margin: 0 0 0.25rem 0;
+            color: #2c3e2f;
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            border-bottom: 3px dashed #f3b33d;
+            padding-bottom: 12px;
+        }
+        .badge {
+            background: #f3b33d;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #2d2b1f;
+        }
+        .question-counter {
+            background: #fff0d4;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #b45f1b;
+        }
+
+        /* вопрос */
+        .question-text {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 1.5rem 0 1.2rem;
+            line-height: 1.3;
+            color: #1e2a2e;
+            background: #fff3e0;
+            padding: 1.5rem;
+            border-radius: 48px;
+            box-shadow: inset 0 0 0 2px #fff, 0 10px 20px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        /* зона таймера */
+        .timer-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin: 20px 0 20px;
+        }
+        .timer-clock {
+            background: #1e293b;
+            border-radius: 80px;
+            padding: 10px 25px;
+            box-shadow: inset 0 0 5px #00000033, 0 8px 12px rgba(0,0,0,0.2);
+        }
+        .timer-digits {
+            font-family: monospace;
+            font-size: 4rem;
+            font-weight: 800;
+            letter-spacing: 4px;
+            color: #facc15;
+            text-shadow: 0 0 4px #ffb347;
+            background: #0f172a;
+            padding: 0.2rem 1rem;
+            border-radius: 60px;
+            display: inline-block;
+            min-width: 180px;
+            text-align: center;
+        }
+        .timer-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* кнопки */
+        button {
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: transform 0.1s ease, background 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        button:active {
+            transform: scale(0.97);
+        }
+        .btn-start {
+            background: #2e7d32;
+            color: white;
+            box-shadow: 0 4px 0 #1b5e20;
+        }
+        .btn-start:hover {
+            background: #1f6b23;
+        }
+        .btn-answer {
+            background: #f57c00;
+            color: white;
+            box-shadow: 0 4px 0 #b45f1b;
+        }
+        .btn-next {
+            background: #374151;
+            color: white;
+            box-shadow: 0 4px 0 #1f2937;
+        }
+        .btn-next:disabled {
+            opacity: 0.5;
+            transform: none;
+            cursor: not-allowed;
+        }
+        .settings {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            align-items: baseline;
+            background: #e9e2d0;
+            padding: 8px 18px;
+            border-radius: 80px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .settings label {
+            font-weight: 600;
+            color: #3b2a1f;
+        }
+        #timerDuration {
+            width: 70px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 30px;
+            border: 1px solid #c0a16b;
+            padding: 5px;
+        }
+
+        /* ответ */
+        .answer-card {
+            background: #fff1db;
+            border-radius: 48px;
+            margin: 25px 0 20px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: 0.2s;
+            border-left: 12px solid #d4a373;
+        }
+        .verdict {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+        }
+        .verdict.true {
+            color: #2b7a2b;
+            background: #e0f2e0;
+            display: inline-block;
+            padding: 0.2rem 2rem;
+            border-radius: 60px;
+        }
+        .verdict.false {
+            color: #b91c1c;
+            background: #ffe0e0;
+            display: inline-block;
+            padding: 0.2rem 2rem;
+            border-radius: 60px;
+        }
+        .explanation {
+            font-size: 1.1rem;
+            margin-top: 1rem;
+            color: #2d3e2c;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: #a2835c;
+        }
+
+        @media (max-width: 650px) {
+            .game-container { padding: 1.5rem; }
+            .question-text { font-size: 1.4rem; }
+            .timer-digits { font-size: 2.5rem; min-width: 120px; }
+            button { padding: 8px 20px; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="game-container" id="gameApp">
+    <h1>
+        🎨 Верю – Не верю
+        <span class="badge">Компьютерная графика</span>
+    </h1>
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 4px;">
+        <div class="question-counter" id="questionCounter">Вопрос 1 из 5</div>
+        <div class="settings">
+            <label>⏱️ Таймер (с):</label>
+            <input type="number" id="timerDuration" value="5" min="3" max="15" step="1">
+        </div>
+    </div>
+
+    <!-- область вопроса -->
+    <div class="question-text" id="questionText">
+        Если увеличить рисунок в программе Paint, он станет состоять из маленьких квадратиков.
+    </div>
+
+    <!-- таймер + кнопки -->
+    <div class="timer-area">
+        <div class="timer-clock">
+            <span class="timer-digits" id="timerDisplay">5</span>
+        </div>
+        <div class="timer-controls">
+            <button class="btn-start" id="startTimerBtn">▶ Старт таймера</button>
+            <button class="btn-answer" id="showAnswerBtn">❓ Показать ответ</button>
+        </div>
+    </div>
+
+    <!-- блок ответа (по умолчанию скрыт) -->
+    <div id="answerBlock" class="answer-card hidden">
+        <div id="verdictText" class="verdict"></div>
+        <div id="explanationText" class="explanation"></div>
+    </div>
+
+    <div style="display: flex; justify-content: center; margin-top: 10px;">
+        <button class="btn-next" id="nextBtn" disabled>➡ Следующий вопрос</button>
+    </div>
+    <footer>Ученики поднимают карточки ⬆️ пока работает таймер! После сигнала – проверяем.</footer>
+</div>
+
+<script>
+    // ---------- БАЗА ВОПРОСОВ (актуализация, жизненный опыт) ----------
+    const questions = [
+        {
+            text: "Если увеличить рисунок в программе Paint, он станет состоять из маленьких квадратиков.",
+            isTrue: true,
+            explanation: "✅ Верно! Эти квадратики называются пикселями. Компьютерные изображения состоят из точек."
+        },
+        {
+            text: "На компьютере можно рисовать не только кисточкой, но и с помощью кругов, прямоугольников и других фигур.",
+            isTrue: true,
+            explanation: "✅ Верно! Почти в каждом графическом редакторе есть инструменты «Фигуры». В Krita их тоже много."
+        },
+        {
+            text: "Фотографию нельзя обрезать или повернуть на компьютере — для этого нужен только телефон.",
+            isTrue: false,
+            explanation: "❌ Не верно! Фотографию можно и обрезать, и повернуть в любом графическом редакторе, даже в Paint."
+        },
+        {
+            text: "Если нарисовать картинку в одной программе, её нельзя открыть в другой программе.",
+            isTrue: false,
+            explanation: "❌ Не верно! Можно сохранить в распространённом формате (PNG, JPEG) — и откроется почти везде."
+        },
+        {
+            text: "Чтобы нарисовать красивый рисунок на компьютере, нужно обязательно уметь хорошо рисовать на бумаге.",
+            isTrue: false,
+            explanation: "❌ Не верно! Компьютер помогает: фигуры, заливка, слои и даже копирование. Шедевр может создать каждый!"
+        }
+    ];
+
+    // DOM элементы
+    const questionTextEl = document.getElementById('questionText');
+    const questionCounterEl = document.getElementById('questionCounter');
+    const timerDisplay = document.getElementById('timerDisplay');
+    const startTimerBtn = document.getElementById('startTimerBtn');
+    const showAnswerBtn = document.getElementById('showAnswerBtn');
+    const answerBlock = document.getElementById('answerBlock');
+    const verdictTextEl = document.getElementById('verdictText');
+    const explanationTextEl = document.getElementById('explanationText');
+    const nextBtn = document.getElementById('nextBtn');
+    const timerDurationInput = document.getElementById('timerDuration');
+
+    let currentIndex = 0;           // 0-based
+    let timerInterval = null;
+    let timeLeft = 5;
+    let isTimerRunning = false;
+    let answerRevealed = false;      // показан ли ответ для текущего вопроса
+    let activeQuestionLock = false;   // чтобы не нажимать старт несколько раз
+
+    // ---- вспомогательные функции ----
+    function stopTimer() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+        isTimerRunning = false;
+    }
+
+    // обновление цифр таймера на экране
+    function updateTimerDisplay(value) {
+        timerDisplay.innerText = value;
+    }
+
+    // что делать при окончании времени
+    function onTimeOut() {
+        if (!answerRevealed && !activeQuestionLock) {
+            // таймер закончился, показываем ответ принудительно
+            revealAnswer();
+        }
+        stopTimer();
+        isTimerRunning = false;
+    }
+
+    // запуск таймера с текущим значением timeLeft
+    function startTimer(seconds) {
+        if (timerInterval) stopTimer();
+        if (answerRevealed) return; // если ответ уже показан, таймер не нужен
+
+        timeLeft = seconds;
+        updateTimerDisplay(timeLeft);
+        isTimerRunning = true;
+        timerInterval = setInterval(() => {
+            if (timeLeft <= 1) {
+                // время вышло
+                updateTimerDisplay(0);
+                onTimeOut();
+                stopTimer();
+            } else {
+                timeLeft--;
+                updateTimerDisplay(timeLeft);
+            }
+        }, 1000);
+    }
+
+    // показать ответ (вызывается либо по кнопке, либо по таймеру)
+    function revealAnswer() {
+        if (answerRevealed) return;
+        answerRevealed = true;
+        // останавливаем таймер, если он ещё тикает
+        if (isTimerRunning) {
+            stopTimer();
+        }
+        const q = questions[currentIndex];
+        // формируем вердикт
+        if (q.isTrue) {
+            verdictTextEl.innerHTML = '<span class="verdict true">✅ ВЕРЮ!</span>';
+        } else {
+            verdictTextEl.innerHTML = '<span class="verdict false">❌ НЕ ВЕРЮ!</span>';
+        }
+        explanationTextEl.innerText = q.explanation;
+        answerBlock.classList.remove('hidden');
+
+        // активируем кнопку "Следующий вопрос"
+        nextBtn.disabled = false;
+        // блокируем кнопки управления ответом/таймером, чтобы не сбивали
+        startTimerBtn.disabled = true;
+        showAnswerBtn.disabled = true;
+    }
+
+    // загрузка текущего вопроса (сброс всего)
+    function loadQuestion(index) {
+        // отчистить таймер
+        stopTimer();
+        isTimerRunning = false;
+        answerRevealed = false;
+        activeQuestionLock = false;
+        
+        const q = questions[index];
+        questionTextEl.innerText = q.text;
+        questionCounterEl.innerText = `Вопрос ${index+1} из ${questions.length}`;
+        
+        // сброс UI ответа
+        answerBlock.classList.add('hidden');
+        verdictTextEl.innerHTML = '';
+        explanationTextEl.innerText = '';
+        
+        // сброс таймера на дефолтное значение (из поля ввода)
+        let defaultTime = parseInt(timerDurationInput.value, 10);
+        if (isNaN(defaultTime) || defaultTime < 1) defaultTime = 5;
+        timeLeft = defaultTime;
+        updateTimerDisplay(timeLeft);
+        
+        // кнопки снова активны
+        startTimerBtn.disabled = false;
+        showAnswerBtn.disabled = false;
+        nextBtn.disabled = true;   // следующий вопрос только после ответа
+    }
+
+    // переход к следующему вопросу
+    function nextQuestion() {
+        if (!answerRevealed) {
+            // если ответ не показан, не даём переключать
+            return;
+        }
+        if (currentIndex + 1 < questions.length) {
+            currentIndex++;
+            loadQuestion(currentIndex);
+        } else {
+            // игра окончена
+            questionTextEl.innerText = "🎉 Поздравляем! Вы прошли все вопросы! 🎉";
+            questionCounterEl.innerText = `Финиш!`;
+            answerBlock.classList.add('hidden');
+            startTimerBtn.disabled = true;
+            showAnswerBtn.disabled = true;
+            nextBtn.disabled = true;
+            if (timerInterval) stopTimer();
+            timerDisplay.innerText = "🏆";
+        }
+    }
+
+    // обработчик нажатия "Старт таймера"
+    function onStartTimer() {
+        if (answerRevealed) return;
+        if (isTimerRunning) {
+            // если уже бежит, не сбиваем
+            return;
+        }
+        // берем актуальное значение из поля длительности
+        let sec = parseInt(timerDurationInput.value, 10);
+        if (isNaN(sec) || sec < 1) sec = 5;
+        timeLeft = sec;
+        updateTimerDisplay(timeLeft);
+        startTimer(timeLeft);
+    }
+
+    // обработчик изменения поля таймера (если меняем в процессе ожидания, обновить отображение)
+    function onTimerDurationChange() {
+        if (!answerRevealed && !isTimerRunning) {
+            let newVal = parseInt(timerDurationInput.value, 10);
+            if (isNaN(newVal)) newVal = 5;
+            timeLeft = newVal;
+            updateTimerDisplay(timeLeft);
+        }
+        // если таймер бежит, изменение не применяем к текущему циклу (безопасно)
+    }
+
+    // ---- инициализация и установка слушателей ----
+    function initGame() {
+        currentIndex = 0;
+        loadQuestion(0);
+        startTimerBtn.addEventListener('click', onStartTimer);
+        showAnswerBtn.addEventListener('click', revealAnswer);
+        nextBtn.addEventListener('click', nextQuestion);
+        timerDurationInput.addEventListener('change', onTimerDurationChange);
+        timerDurationInput.addEventListener('input', onTimerDurationChange);
+    }
+
+    initGame();
+</script>
+</body>
+</html>
